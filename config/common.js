@@ -68,7 +68,7 @@ module.exports = {
 			}
 		]),
 		new HtmlWebpackPlugin({
-			template: './src/index.html',
+			template: path.resolve(__root, 'index.html'),
 		}),
 		new webpack.ProvidePlugin({
 			'THREE': 'three'
