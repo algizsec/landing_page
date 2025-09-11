@@ -1,4 +1,4 @@
-// @author brunoimbrizi / http://brunoimbrizi.com
+// @author brunoimbrizi / https://brunoimbrizi.com
 
 precision highp float;
 

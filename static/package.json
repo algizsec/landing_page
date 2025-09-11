@@ -1,16 +1,16 @@
 {
-  "name": "webpack-threejs",
-  "version": "1.0.1",
-  "description": "A simple boilerplate to start projects with Three.js using webpack.",
+  "name": "Algiz Landing Page",
+  "version": "1.0",
+  "description": "Algiz Security - independent smart contract security team",
   "keywords": [
-    "three.js",
-    "webpack",
-    "glsl",
-    "glslify"
+    "algiz",
+    "web3",
+    "blockchain",
+    "security"
   ],
   "author": {
-    "name": "Bruno Imbrizi",
-    "url": "http://brunoimbrizi.com"
+    "name": "0xVard",
+    "url": "https://github.com/0xvard"
   },
   "license": "MIT",
   "sideEffects": false,
