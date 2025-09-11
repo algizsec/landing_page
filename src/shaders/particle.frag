@@ -17,16 +17,20 @@ void main() {
 
 	// greyscale
 	float grey = colA.r * 0.21 + colA.g * 0.71 + colA.b * 0.07;
+	vec4 gold = vec4(0.831, 0.686, 0.216, 1.0);
 	vec4 colB = vec4(grey, grey, grey, 1.0);
+	vec4 tinted = gold*grey;
+	
 
 	// circle
 	float border = 0.3;
 	float radius = 0.5;
 	float dist = radius - distance(uv, vec2(0.5));
 	float t = smoothstep(0.0, border, dist);
+	gl_FragColor = tinted;
 
 	// final color
-	color = colB;
+	color = gl_FragColor;
 	color.a = t;
 
 	gl_FragColor = color;

@@ -6,10 +6,31 @@ const glslify = require('glslify');
 
 export default class Particles {
 	
-	constructor(webgl) {
+	constructor(webgl, opts) {
 		this.webgl = webgl;
 		this.container = new THREE.Object3D();
-	}
+
+		// merge with defaults FIRST, then coerce to numbers safely
+		const cfg = Object.assign({ depth: 5, random: 5, size: 1 }, opts || {});
+
+		// force numbers; if NaN or missing, fall back to defaults
+		const toNum = (v, d) => {
+			const n = typeof v === 'string' ? parseFloat(v) : v;
+			return Number.isFinite(n) ? n : d;
+		};
+
+		// use names that won't collide with anything else
+		this.pDepth  = toNum(cfg.depth,  5);
+		this.pRandom = toNum(cfg.random, 5);
+		this.pSize   = toNum(cfg.size,   1);
+		this.pTouchRadius = toNum(cfg.touchRadius, 1);
+
+		// sanity log
+		// (comment out later)
+		console.log('[Particles ctor] cfg:', cfg, '→', {
+			depth: this.pDepth, random: this.pRandom, size: this.pSize
+		});
+	}		
 
 	init(src) {
 		const loader = new THREE.TextureLoader();
@@ -64,9 +85,9 @@ export default class Particles {
 
 		const uniforms = {
 			uTime: { value: 0 },
-			uRandom: { value: 1.0 },
-			uDepth: { value: 2.0 },
-			uSize: { value: 0.0 },
+			uRandom: { value: this.pRandom },
+			uDepth:  { value: this.pDepth  },
+			uSize:   { value: this.pSize   },
 			uTextureSize: { value: new THREE.Vector2(this.width, this.height) },
 			uTexture: { value: this.texture },
 			uTouch: { value: null },
@@ -128,8 +149,8 @@ export default class Particles {
 	}
 
 	initTouch() {
-		// create only once
 		if (!this.touch) this.touch = new TouchTexture(this);
+		this.touch.radius = this.pTouchRadius;
 		this.object3D.material.uniforms.uTouch.value = this.touch.texture;
 	}
 
@@ -142,18 +163,17 @@ export default class Particles {
 	}
 
 	addListeners() {
-		this.handlerInteractiveMove = this.onInteractiveMove.bind(this);
-
-		this.webgl.interactive.addListener('interactive-move', this.handlerInteractiveMove);
-		this.webgl.interactive.objects.push(this.hitArea);
-		this.webgl.interactive.enable();
+	this.handlerInteractiveMove = this.onInteractiveMove.bind(this);
+	   this.webgl.interactive.addListener('interactive-move', this.handlerInteractiveMove);
+	   this.webgl.interactive.objects.push(this.hitArea);
+	   this.webgl.interactive.enable();
 	}
 
 	removeListeners() {
+		if (!this.webgl || !this.webgl.interactive) return;
 		this.webgl.interactive.removeListener('interactive-move', this.handlerInteractiveMove);
-		
-		const index = this.webgl.interactive.objects.findIndex(obj => obj === this.hitArea);
-		this.webgl.interactive.objects.splice(index, 1);
+		const i = this.webgl.interactive.objects.findIndex(o => o === this.hitArea);
+		if (i !== -1) this.webgl.interactive.objects.splice(i, 1);
 		this.webgl.interactive.disable();
 	}
 
@@ -164,29 +184,45 @@ export default class Particles {
 	update(delta) {
 		if (!this.object3D) return;
 		if (this.touch) this.touch.update();
-
 		this.object3D.material.uniforms.uTime.value += delta;
 	}
 
 	show(time = 1.0) {
-		// reset
-		TweenLite.fromTo(this.object3D.material.uniforms.uSize, time, { value: 0.5 }, { value: 1.5 });
-		TweenLite.to(this.object3D.material.uniforms.uRandom, time, { value: 2.0 });
-		TweenLite.fromTo(this.object3D.material.uniforms.uDepth, time * 1.5, { value: 40.0 }, { value: 4.0 });
+		const u = this.object3D.material.uniforms;
 
+		const endSize   = this.pSize;
+		const endRandom = this.pRandom;
+		const endDepth  = this.pDepth;
+
+		const startSize  = Math.max(0.05, endSize * 0.35);
+		const startDepth = Math.max(40.0, endDepth * 6.0);
+
+		u.uSize.value   = startSize;
+		u.uRandom.value = Math.max(0.01, endRandom * 0.3);
+		u.uDepth.value  = startDepth;
+
+		TweenLite.fromTo(u.uSize,   time,       { value: startSize  }, { value: endSize   });
+		TweenLite.to(    u.uRandom, time,                             { value: endRandom  });
+		TweenLite.fromTo(u.uDepth,  time * 1.5, { value: startDepth }, { value: endDepth  });
+
+		// debug snapshots (comment out later)
+		setTimeout(() => console.log('[Particles show @0ms]', {
+		random: u.uRandom.value, depth: u.uDepth.value, size: u.uSize.value
+		}), 0);
+		TweenLite.delayedCall(time * 1.6, () => {
+		console.log('[Particles show @end]', {
+			random: u.uRandom.value, depth: u.uDepth.value, size: u.uSize.value
+		});
+		});	
 		this.addListeners();
 	}
 
 	hide(_destroy, time = 0.8) {
-		return new Promise((resolve, reject) => {
-			TweenLite.to(this.object3D.material.uniforms.uRandom, time, { value: 5.0, onComplete: () => {
-				if (_destroy) this.destroy();
-				resolve();
-			} });
-			TweenLite.to(this.object3D.material.uniforms.uDepth, time, { value: -20.0, ease: Quad.easeIn });
-			TweenLite.to(this.object3D.material.uniforms.uSize, time * 0.8, { value: 0.0 });
-
-			this.removeListeners();
+	return new Promise((resolve) => {
+		const u = this.object3D.material.uniforms;
+			TweenLite.to(u.uRandom, time,       { value: Math.max(0.01, this.pRandom * 2.0) });
+			TweenLite.to(u.uDepth,  time,       { value: -Math.abs(this.pDepth), ease: Quad.easeIn });
+			TweenLite.to(u.uSize,   time * 0.8, { value: 0.0, onComplete: () => { if (_destroy) this.destroy(); resolve(); }});
 		});
 	}
 

@@ -16,8 +16,9 @@ export default class App {
 	}
 
 	initWebGL() {
-		this.webgl = new WebGLView(this);
-		document.querySelector('.container').appendChild(this.webgl.renderer.domElement);
+		const logoEl = document.getElementById('logo');
+		this.webgl = new WebGLView(this, logoEl);
+		document.querySelector('.logo-wrap').appendChild(this.webgl.renderer.domElement);
 	}
 
 	initGUI() {
@@ -29,9 +30,6 @@ export default class App {
 
 		window.addEventListener('resize', this.resize.bind(this));
 		window.addEventListener('keyup', this.keyup.bind(this));
-		
-		const el = this.webgl.renderer.domElement;
-		el.addEventListener('click', this.click.bind(this));
 	}
 
 	animate() {
