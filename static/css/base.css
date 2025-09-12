@@ -116,6 +116,8 @@ a:focus {
   inset: 0;
   z-index: 20000;
   user-select: none;          /* text non-selectable */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   -webkit-user-select: none;
   -ms-user-select: none;
 }
@@ -145,8 +147,9 @@ a:focus {
 
 .card--right {
   position: relative;
-  max-height: 100dvh;
+  max-height: none;
   overflow-y: auto; /* independent scroll if taller than viewport */
+  overflow: visible;
   justify-self: start;
   align-self: center;
   z-index: 2;
