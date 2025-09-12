@@ -36,14 +36,31 @@ jobs:
         run: npm ci
 
       - name: Build site
+        # If you're using Vite, it builds to dist/ by default (or per your config).
+        # If you're using Webpack, keep NODE_OPTIONS only if you actually need it.
         run: npm run build
         env:
-          NODE_OPTIONS: --openssl-legacy-provider   # only if you need it for Webpack
+          NODE_OPTIONS: --openssl-legacy-provider
 
+      # ---- Post-build adjustments to the output artifact (dist/) ----
+      - name: Ensure favicon is in dist/
+        run: |
+          mkdir -p dist
+          if [ ! -f dist/favicon.ico ] && [ -f favicon.ico ]; then
+            cp favicon.ico dist/
+          fi
+
+      - name: Add CNAME for custom domain
+        run: echo "algiz.io" > dist/CNAME
+
+      - name: List dist contents (sanity check)
+        run: ls -la dist
+
+      # ---- Upload and deploy ----
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist   # IMPORTANT: change to your build output folder
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         id: deployment
