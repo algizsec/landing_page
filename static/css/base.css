@@ -303,16 +303,17 @@ a:focus {
 
   .panel_subtitle {
     white-space: nowrap;
-    font-size: clamp(16px, 4vw, 22px);
+    font-size: clamp(18px, 4.5vw, 24px);
   }
 
   .panel_identity {
     white-space: nowrap;
-    font-size: clamp(14px, 3.5vw, 18px);
+    font-size: clamp(16px, 4vw, 20px);
   }
 
   .panel_list li {
     white-space: nowrap;
+    font-size: clamp(14px, 3.5vw, 16px);
   }
 
   .btn {
