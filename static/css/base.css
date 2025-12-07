@@ -327,6 +327,10 @@ a:focus {
     align-items: flex-start;
     gap: 10px;
   }
+
+  .socials {
+    align-self: flex-end;
+  }
 }
 
 /* ---------- large screens: increase the center gap slightly ---------- */
